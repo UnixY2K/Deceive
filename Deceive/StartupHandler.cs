@@ -66,7 +66,7 @@ internal static class StartupHandler
         try
         {
             File.WriteAllText(Path.Combine(Persistence.DataDir, "debug.log"), string.Empty);
-            Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Persistence.DataDir, "debug.log")));
+            System.Diagnostics.Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Persistence.DataDir, "debug.log")));
             Debug.AutoFlush = true;
             Trace.WriteLine(DeceiveTitle);
         }
