@@ -21,7 +21,7 @@ internal static class StartupHandler
     public static async Task Main(LaunchGame args = LaunchGame.Auto, string gamePatchline = "live", string? riotClientParams = null, string? gameParams = null)
     {
         AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
-        Application.EnableVisualStyles();
+        ApplicationConfiguration.Initialize();
         try
         {
             await StartDeceiveAsync(args, gamePatchline, riotClientParams, gameParams);
@@ -161,7 +161,7 @@ internal static class StartupHandler
             if (servingClients)
                 return;
             servingClients = true;
-            mainController.StartServingClients(listener, args.ChatHost, args.ChatPort);
+            mainController.StartServingClients(listener, args.ChatHost ?? "", args.ChatPort);
         };
 
         // Loop infinitely and handle window messages/tray icon.

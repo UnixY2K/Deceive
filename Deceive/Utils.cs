@@ -94,7 +94,7 @@ internal static class Utils
     }
 
     // Return the currently running Riot Client process, or null if none are running.
-    public static Process GetRiotClientProcess() => Process.GetProcessesByName("RiotClientServices").FirstOrDefault();
+    public static Process? GetRiotClientProcess() => Process.GetProcessesByName("RiotClientServices").FirstOrDefault();
 
     // Checks if there is a running LCU/LoR/VALORANT/RC or Deceive instance.
     public static bool IsClientRunning() => GetProcesses().Any();
@@ -128,7 +128,7 @@ internal static class Utils
                 Environment.Exit(0);
             }
 
-            throw ex;
+            throw;
         }
     }
 
