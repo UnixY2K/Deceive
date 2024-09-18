@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Avalonia;
 
 namespace Deceive;
 
@@ -165,7 +166,7 @@ internal static class StartupHandler
         };
 
         // Loop infinitely and handle window messages/tray icon.
-        Application.Run(mainController);
+        System.Windows.Forms.Application.Run(mainController);
     }
 
     private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -196,4 +197,11 @@ internal static class StartupHandler
             }
         };
     }
+
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
 }

@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Deceive.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="350"
+        Width="567"
+		Height="333"
+		x:Class="Deceive.Views.GamePromptWindow"
+        x:DataType="vm:GamePromptWindowViewModel"
+        Icon="/Resources/deceive.ico"
+        Title="Deceive">
+
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:GamePromptWindowViewModel/>
+	</Design.DataContext>
+
+
+	<Grid Margin="5">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<Border Padding="10" Grid.Row="0">
+			<TextBlock Text="{Binding GameLaunch}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+		</Border>
+
+
+		<UniformGrid Grid.Row="1">
+			<Border Grid.Column="0" Grid.Row="1" Padding="5">
+				<Button Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Image>/Resources/games/lol.png</Image>
+				</Button>
+			</Border>
+			<Border Grid.Column="0" Grid.Row="1" Padding="5">
+				<Button Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Image>/Resources/games/lor.png</Image>
+				</Button>
+			</Border>
+			<Border Grid.Column="0" Grid.Row="1" Padding="5">
+				<Button Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Image>/Resources/games/valorant.png</Image>
+				</Button>
+			</Border>
+			<Border Grid.Column="0" Grid.Row="1" Padding="5">
+				<Button Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Image>/Resources/games/riot_client.png</Image>
+				</Button>
+			</Border>
+		</UniformGrid>
+		<Border Padding="10" Grid.Row="2">
+
+			<CheckBox>
+				<TextBlock Text="{Binding RememberDesition}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+			</CheckBox>
+		</Border>
+	</Grid>
+
+
+</Window>

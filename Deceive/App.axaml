@@ -1,0 +1,40 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Deceive.App"
+             xmlns:local="using:Deceive"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+	<TrayIcon.Icons>
+		<TrayIcons>
+			<TrayIcon Icon="/Resources/deceive.ico"
+					  ToolTipText="Avalonia Tray Icon ToolTip">
+				<TrayIcon.Menu>
+					<NativeMenu>
+						<NativeMenuItem Header="Deceive" IsEnabled="False"/>
+						<NativeMenuItem Header="Enabled" ToggleType="CheckBox" IsChecked="True"/>
+						<NativeMenuItem Header="Settings">
+							<NativeMenu>
+								<NativeMenuItem Header="Online"  ToggleType="Radio" IsChecked="False"/>
+								<NativeMenuItem Header="Offline" ToggleType="Radio" IsChecked="True"/>
+								<NativeMenuItem Header="Mobile"  ToggleType="Radio" IsChecked="False"/>
+							</NativeMenu>
+						</NativeMenuItem>
+						<NativeMenuItem Header="Enable Lobby chat" ToggleType="CheckBox" IsChecked="True"/>
+						<NativeMenuItem Header="Restart and launch a different game"/>
+						<NativeMenuItem Header="Quit"/>
+					</NativeMenu>
+				</TrayIcon.Menu>
+			</TrayIcon>
+		</TrayIcons>
+	</TrayIcon.Icons>
+
+</Application>
