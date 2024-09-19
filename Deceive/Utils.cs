@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -31,61 +32,71 @@ internal static class Utils
      * Asynchronously checks if the current version of Deceive is the latest version.
      * If not, and the user has not dismissed the message before, an alert is shown.
      */
-    public static async Task CheckForUpdatesAsync()
+    public static async Task<String?> CheckForUpdatesAsync()
     {
         try
         {
-            var httpClient = new HttpClient();
+            using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Deceive", DeceiveVersion));
 
             var response =
-                await httpClient.GetAsync("https://api.github.com/repos/molenzwiebel/Deceive/releases/latest");
-            var content = await response.Content.ReadAsStringAsync();
+                await httpClient.GetAsync(new Uri("https://api.github.com/repos/molenzwiebel/Deceive/releases/latest")).ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             var release = JsonSerializer.Deserialize<JsonNode>(content);
             var latestVersion = release?["tag_name"]?.ToString();
 
             // If failed to fetch or already latest or newer, return.
             if (latestVersion is null)
-                return;
-            var githubVersion = new Version(latestVersion.Replace("v", ""));
-            var assemblyVersion = new Version(DeceiveVersion.Replace("v", ""));
+                return null;
+            var githubVersion = new Version(latestVersion.Replace("v", "", StringComparison.OrdinalIgnoreCase));
+            var assemblyVersion = new Version(DeceiveVersion.Replace("v", "", StringComparison.OrdinalIgnoreCase));
             // Earlier = -1, Same = 0, Later = 1
             if (assemblyVersion.CompareTo(githubVersion) != -1)
-                return;
+                return null;
 
             // Check if we have shown this before.
             var latestShownVersion = Persistence.GetPromptedUpdateVersion();
 
             // If we have, return.
             if (string.IsNullOrEmpty(latestShownVersion) && latestShownVersion == latestVersion)
-                return;
+                return null;
 
             // Show a message and record the latest shown.
             Persistence.SetPromptedUpdateVersion(latestVersion);
 
-            var result = MessageBox.Show(
-                $"There is a new version of Deceive available: {latestVersion}. You are currently using Deceive {DeceiveVersion}. " +
-                "Deceive updates usually fix critical bugs or adapt to changes by Riot, so it is recommended that you install the latest version.\n\n" +
-                "Press OK to visit the download page, or press Cancel to continue. Don't worry, we won't bother you with this message again if you press cancel.",
-                StartupHandler.DeceiveTitle,
-                MessageBoxButtons.OKCancel,
-                MessageBoxIcon.Information,
-                MessageBoxDefaultButton.Button1
-            );
-
-            if (result is DialogResult.OK)
-                // Open the url in the browser.
-                Process.Start(release?["html_url"]?.ToString()!);
+            return release?["html_url"]?.ToString();
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            // Ignored.
+            // Log the exception or handle it as needed.
+            Console.WriteLine($"Request error: {ex.Message}");
         }
+        catch (JsonException ex)
+        {
+            // Log the exception or handle it as needed.
+            Console.WriteLine($"JSON error: {ex.Message}");
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Log the exception or handle it as needed.
+            Console.WriteLine($"Invalid operation error: {ex.Message}");
+        }
+        catch (TaskCanceledException ex)
+        {
+            // Log the exception or handle it as needed.
+            Console.WriteLine($"Task canceled error: {ex.Message}");
+        }
+        catch (IOException ex)
+        {
+            // Log the exception or handle it as needed.
+            Console.WriteLine($"IO error: {ex.Message}");
+        }
+        return null;
     }
 
-    private static IEnumerable<Process> GetProcesses()
+    private static List<Process> GetProcesses()
     {
-        var riotCandidates = Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Where(process => process.Id != Process.GetCurrentProcess().Id).ToList();
+        var riotCandidates = Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Where(process => process.Id != Environment.ProcessId).ToList();
         riotCandidates.AddRange(Process.GetProcessesByName("LeagueClient"));
         riotCandidates.AddRange(Process.GetProcessesByName("LoR"));
         riotCandidates.AddRange(Process.GetProcessesByName("VALORANT-Win64-Shipping"));
@@ -97,7 +108,7 @@ internal static class Utils
     public static Process? GetRiotClientProcess() => Process.GetProcessesByName("RiotClientServices").FirstOrDefault();
 
     // Checks if there is a running LCU/LoR/VALORANT/RC or Deceive instance.
-    public static bool IsClientRunning() => GetProcesses().Any();
+    public static bool IsClientRunning() => GetProcesses().Count != 0;
 
     // Kills the running LCU/LoR/VALORANT/RC or Deceive instance, if applicable.
     public static void KillProcesses()

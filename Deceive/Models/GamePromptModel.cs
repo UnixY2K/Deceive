@@ -1,5 +1,6 @@
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Deceive.Controllers;
 using MsBox.Avalonia;
@@ -36,6 +37,22 @@ namespace Deceive.Models
 
             }
             return true;
+        }
+
+        public static async Task CheckForUpdates(){
+            string? updateUrl = await Utils.CheckForUpdatesAsync().ConfigureAwait(true);
+            if (updateUrl is not null)
+            {
+                var box = MessageBoxManager.GetMessageBoxStandard(StartupHandler.DeceiveTitle,
+                    $"There is a new version of Deceive available. You are currently using Deceive {Utils.DeceiveVersion}. " +
+                    $"Do you want to download the new version?",
+                    ButtonEnum.YesNo,
+                    Icon.Question
+                );
+                var result = await box.ShowAsync().ConfigureAwait(true);
+                if (result is ButtonResult.Yes)
+                    Process.Start(updateUrl);
+            }
         }
     }
 }

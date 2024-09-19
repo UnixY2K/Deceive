@@ -15,7 +15,6 @@ public partial class GamePromptWindow : Window
 
     internal static LaunchGame SelectedGame = LaunchGame.Auto;
 
-    private bool gameSelected;
     public GamePromptWindow()
     {
         InitializeComponent();
@@ -86,7 +85,6 @@ public partial class GamePromptWindow : Window
         Persistence.SetSelectedGame(game);
 
         SelectedGame = game;
-        gameSelected = true;
         Close();
     }
 }

@@ -8,13 +8,11 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Linq;
 using Deceive.Properties;
 
 namespace Deceive;
 
-internal class MainController : ApplicationContext
+internal sealed class MainController : ApplicationContext
 {
     internal MainController()
     {
@@ -227,22 +225,22 @@ internal class MainController : ApplicationContext
 
     public async Task HandleChatMessage(string content)
     {
-        if (content.ToLower().Contains("offline"))
+        if (content.Contains("offline", StringComparison.CurrentCultureIgnoreCase))
         {
             if (!Enabled)
-                await SendMessageFromFakePlayerAsync("Deceive is now enabled.");
+                await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
             OfflineStatus.PerformClick();
         }
-        else if (content.ToLower().Contains("mobile"))
+        else if (content.Contains("mobile", StringComparison.CurrentCultureIgnoreCase))
         {
             if (!Enabled)
-                await SendMessageFromFakePlayerAsync("Deceive is now enabled.");
+                await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
             MobileStatus.PerformClick();
         }
         else if (content.ToLower().Contains("online"))
         {
             if (!Enabled)
-                await SendMessageFromFakePlayerAsync("Deceive is now enabled.");
+                await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
             ChatStatus.PerformClick();
         }
         else if (content.ToLower().Contains("enable"))

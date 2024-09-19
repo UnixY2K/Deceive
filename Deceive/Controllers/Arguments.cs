@@ -1,7 +1,7 @@
 ﻿
 namespace Deceive.Controllers
 {
-    internal sealed class Arguments
+    internal static class Arguments
     {
 
         public static LaunchGame game;

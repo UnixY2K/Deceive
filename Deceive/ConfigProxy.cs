@@ -14,7 +14,7 @@ using EmbedIO.Actions;
 
 namespace Deceive;
 
-internal class ConfigProxy
+internal sealed class ConfigProxy
 {
     private const string ConfigUrl = "https://clientconfig.rpg.riotgames.com";
     private const string GeoPasUrl = "https://riot-geo.pas.si.riotgames.com/pas/v1/service/chat";
@@ -29,7 +29,7 @@ internal class ConfigProxy
         ChatPort = chatPort;
 
         // Find a free port.
-        var l = new TcpListener(IPAddress.Loopback, 0);
+        using var l = new TcpListener(IPAddress.Loopback, 0);
         l.Start();
         var port = ((IPEndPoint)l.LocalEndpoint).Port;
         l.Stop();
@@ -37,19 +37,10 @@ internal class ConfigProxy
         ConfigPort = port;
 
         // Start a web server that sends everything to ProxyAndRewriteResponse
-        var server = new WebServer(o => o
+        using var server = new WebServer(o => o
                 .WithUrlPrefix("http://127.0.0.1:" + port)
                 .WithMode(HttpListenerMode.EmbedIO))
             .WithModule(new ActionModule("/", HttpVerbs.Get, ProxyAndRewriteResponseAsync));
-
-        // For anything older than Windows 10, use TLS 1.2 and disable certificate validation.
-        // Needs entries uncommented in app.manifest to detect the OS version properly.
-        if (Environment.OSVersion.Version.Major < 10)
-        {
-            Trace.WriteLine("Found OS older than Windows 10: Use TLS 1.2 and disable certificate validation.");
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            ServicePointManager.ServerCertificateValidationCallback = (_, _, _, _) => true;
-        }
 
         // Catch exceptions in ProxyAndRewriteResponse
         server.OnHttpException += (_, exception) =>
@@ -92,9 +83,9 @@ internal class ConfigProxy
         if (ctx.Request.Headers["authorization"] is not null)
             message.Headers.TryAddWithoutValidation("Authorization", ctx.Request.Headers["authorization"]);
 
-        var result = await Client.SendAsync(message);
+        var result = await Client.SendAsync(message).ConfigureAwait(false);
         Trace.WriteLine("Received response from clientconfig service with status code: " + result.StatusCode);
-        var content = await result.Content.ReadAsStringAsync();
+        var content = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
         var modifiedContent = content;
         Trace.WriteLine("ORIGINAL CLIENTCONFIG: " + content);
 
@@ -132,12 +123,12 @@ internal class ConfigProxy
                 var affinities = configObject["chat.affinities"];
                 if (configObject["chat.affinity.enabled"]?.GetValue<bool>() ?? false)
                 {
-                    var pasRequest = new HttpRequestMessage(HttpMethod.Get, GeoPasUrl);
+                    using var pasRequest = new HttpRequestMessage(HttpMethod.Get, GeoPasUrl);
                     pasRequest.Headers.TryAddWithoutValidation("Authorization", ctx.Request.Headers["authorization"]);
 
                     try
                     {
-                        var pasJwt = await (await Client.SendAsync(pasRequest)).Content.ReadAsStringAsync();
+                        var pasJwt = await (await Client.SendAsync(pasRequest).ConfigureAwait(false)).Content.ReadAsStringAsync().ConfigureAwait(false);
                         Trace.WriteLine("PAS JWT:" + pasJwt);
                         var pasJwtContent = pasJwt.Split('.')[1];
                         var validBase64 = pasJwtContent.PadRight((pasJwtContent.Length / 4 * 4) + (pasJwtContent.Length % 4 == 0 ? 0 : 4), '=');
@@ -199,11 +190,11 @@ RESPOND:
         ctx.Response.SendChunked = false;
         ctx.Response.ContentLength64 = responseBytes.Length;
         ctx.Response.ContentType = "application/json";
-        await ctx.Response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
+        await ctx.Response.OutputStream.WriteAsync(responseBytes.AsMemory(), default).ConfigureAwait(false);
         ctx.Response.OutputStream.Close();
     }
 
-    internal class ChatServerEventArgs : EventArgs
+    internal sealed class ChatServerEventArgs : EventArgs
     {
         internal string? ChatHost { get; set; }
         internal int ChatPort { get; set; }

@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Deceive;
 
-internal class ProxiedConnection
+internal sealed class ProxiedConnection
 {
     private MainController MainController { get; set; }
 
@@ -260,13 +260,13 @@ internal class ProxiedConnection
         if (!InsertedFakePlayer || !Connected)
             return;
 
-        var stamp = DateTime.UtcNow.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var stamp = DateTime.UtcNow.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
 
         var chatMessage =
             $"<message from='41c322a1-b328-495b-a004-5ccd3e45eae8@eu1.pvp.net/RC-Deceive' stamp='{stamp}' id='fake-{stamp}' type='chat'><body>{message}</body></message>";
 
         var bytes = Encoding.UTF8.GetBytes(chatMessage);
-        await Incoming.WriteAsync(bytes, 0, bytes.Length);
+        await Incoming.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
         Trace.WriteLine("<!--DECEIVE TO RC-->" + chatMessage);
     }
 

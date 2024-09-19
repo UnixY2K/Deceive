@@ -37,26 +37,29 @@ internal static class StartupHandler
     /// Actual main function. Wrapped into a separate function so we can catch exceptions.
     private static async Task StartDeceiveAsync()
     {
-        var Application = BuildAvaloniaApp();
-        Application.StartWithClassicDesktopLifetime([]);
 
         try
         {
-            File.WriteAllText(Path.Combine(Persistence.DataDir, "debug.log"), string.Empty);
-            System.Diagnostics.Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Persistence.DataDir, "debug.log")));
+            await File.WriteAllTextAsync(Path.Combine(Persistence.DataDir, "debug.log"), string.Empty).ConfigureAwait(false);
+            Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Persistence.DataDir, "debug.log")));
             Debug.AutoFlush = true;
             Trace.WriteLine(DeceiveTitle);
         }
-        catch
+        catch (IOException ex)
         {
-            // ignored; just don't save logs if file is already being accessed
+            Trace.WriteLine($"Failed to write to debug log: {ex.Message}");
         }
+
+        var Application = BuildAvaloniaApp();
+        Application.StartWithClassicDesktopLifetime([]);
+
+        
 
         // Step 0: Check for updates in the background.
         _ = Utils.CheckForUpdatesAsync();
 
         // Step 1: Open a port for our chat proxy, so we can patch chat port into clientconfig.
-        var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         Trace.WriteLine($"Chat proxy listening on port {port}");
@@ -100,7 +103,7 @@ internal static class StartupHandler
             LaunchGame.LoR => "bacon",
             LaunchGame.VALORANT => "valorant",
             LaunchGame.RiotClient => null,
-            var x => throw new Exception("Unexpected LaunchGame: " + x)
+            var x => throw new InvalidOperationException("Unexpected LaunchGame: " + x)
         };
 
         // Step 3: Start proxy web server for clientconfig
@@ -126,7 +129,7 @@ internal static class StartupHandler
             ListenToRiotClientExit(riotClient);
         }
 
-        var mainController = new MainController();
+        using var mainController = new MainController();
 
         // Step 5: Get chat server and port for this player by listening to event from ConfigProxy.
         var servingClients = false;
@@ -158,7 +161,7 @@ internal static class StartupHandler
         riotClientProcess.Exited += async (sender, e) =>
         {
             Trace.WriteLine("Detected Riot Client exit.");
-            await Task.Delay(3000); // wait for a bit to ensure this is not a relaunch triggered by the RC
+            await Task.Delay(3000).ConfigureAwait(false); // wait for a bit to ensure this is not a relaunch triggered by the RC
 
             var newProcess = Utils.GetRiotClientProcess();
             if (newProcess is not null)
