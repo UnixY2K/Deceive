@@ -16,11 +16,18 @@ public partial class GamePromptWindow : Window
     {
         InitializeComponent();
         Closing += (sender, e) => OnClose(sender, e);
+        Loaded += (sender, e) => OnLoaded(sender, e);
     }
 
 
     private void OnClose(object? sender, WindowClosingEventArgs e)
     {
+
+    }
+
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        // check if the riot client is running
 
     }
 
