@@ -39,24 +39,6 @@ internal static class StartupHandler
     {
         var Application = BuildAvaloniaApp();
         Application.StartWithClassicDesktopLifetime([]);
-        // Refuse to do anything if the client is already running, unless we're specifically
-        // allowing that through League/RC's --allow-multiple-clients.
-        if (Utils.IsClientRunning() && !(Arguments.riotClientParams?.Contains("allow-multiple-clients") ?? false))
-        {
-            var result = MessageBox.Show(
-                "The Riot Client is currently running. In order to mask your online status, the Riot Client needs to be started by Deceive. " +
-                "Do you want Deceive to stop the Riot Client and games launched by it, so that it can restart with the proper configuration?",
-                DeceiveTitle,
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button1
-            );
-
-            if (result is not DialogResult.Yes)
-                return;
-            Utils.KillProcesses();
-            await Task.Delay(2000); // Riot Client takes a while to die
-        }
 
         try
         {
