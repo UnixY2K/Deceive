@@ -3,8 +3,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-	<UseWPF>true</UseWPF>
-	<EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Nullable>enable</Nullable>
     <AssemblyVersion>1.14.0.0</AssemblyVersion>
     <LangVersion>default</LangVersion>
@@ -40,4 +38,13 @@
       <DependentUpon>GamePromptWindow.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+
+  	<PropertyGroup>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
+		<AnalysisLevel>latest</AnalysisLevel>
+	</PropertyGroup>
 </Project>
