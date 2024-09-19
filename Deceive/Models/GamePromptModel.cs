@@ -39,11 +39,13 @@ namespace Deceive.Models
             return true;
         }
 
-        public static async Task CheckForUpdates(){
+        public static async Task CheckForUpdates()
+        {
             string? updateUrl = await Utils.CheckForUpdatesAsync().ConfigureAwait(true);
             if (updateUrl is not null)
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(StartupHandler.DeceiveTitle,
+                var box = MessageBoxManager.GetMessageBoxStandard(
+                    StartupHandler.DeceiveTitle,
                     $"There is a new version of Deceive available. You are currently using Deceive {Utils.DeceiveVersion}. " +
                     $"Do you want to download the new version?",
                     ButtonEnum.YesNo,
@@ -53,6 +55,24 @@ namespace Deceive.Models
                 if (result is ButtonResult.Yes)
                     Process.Start(updateUrl);
             }
+        }
+
+        public static async Task<bool> CheckRiotClientPath()
+        {
+            var riotClientPath = Utils.GetRiotClientPath();
+            if (riotClientPath is null)
+            {
+                var box = MessageBoxManager.GetMessageBoxStandard(
+                    StartupHandler.DeceiveTitle,
+                    "Deceive was unable to find the path to the Riot Client. Usually this can be resolved by launching any Riot Games game once, then launching Deceive again. " +
+                    "If this does not resolve the issue, please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
+                    ButtonEnum.Ok,
+                    Icon.Error
+                );
+                await box.ShowAsync().ConfigureAwait(true);
+                return false;
+            }
+            return true;
         }
     }
 }

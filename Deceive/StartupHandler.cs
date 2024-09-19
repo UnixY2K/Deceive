@@ -53,10 +53,6 @@ internal static class StartupHandler
         var Application = BuildAvaloniaApp();
         Application.StartWithClassicDesktopLifetime([]);
 
-        
-
-        // Step 0: Check for updates in the background.
-        _ = Utils.CheckForUpdatesAsync();
 
         // Step 1: Open a port for our chat proxy, so we can patch chat port into clientconfig.
         using var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -67,35 +63,7 @@ internal static class StartupHandler
         // Step 2: Find the Riot Client.
         var riotClientPath = Utils.GetRiotClientPath();
 
-        // If the riot client doesn't exist, the user is either severely outdated or has a bugged install.
-        if (riotClientPath is null)
-        {
-            MessageBox.Show(
-                "Deceive was unable to find the path to the Riot Client. Usually this can be resolved by launching any Riot Games game once, then launching Deceive again. " +
-                "If this does not resolve the issue, please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
-                DeceiveTitle,
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error,
-                MessageBoxDefaultButton.Button1
-            );
-
-            return;
-        }
-
-        var game = Arguments.game;
-        // If launching "auto", use the persisted launch game (which defaults to prompt).
-        if (game is LaunchGame.Auto)
-            game = Persistence.GetDefaultLaunchGame();
-
-        // If prompt, display dialog.
-        if (game is LaunchGame.Prompt)
-        {
-            game = Persistence.SelectedGame;
-        }
-
-        // If we don't have a concrete game by now, the user has cancelled and nothing we can do.
-        if (game is LaunchGame.Prompt or LaunchGame.Auto)
-            return;
+        var game = Persistence.SelectedGame;
 
         var launchProduct = game switch
         {

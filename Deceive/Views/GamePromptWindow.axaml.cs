@@ -1,10 +1,12 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Deceive.Controllers;
 using Deceive.Models;
 using Deceive.ViewModels;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using System;
+using System.CommandLine;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -35,11 +37,28 @@ public partial class GamePromptWindow : Window
         try
         {
             var closedClient = await GamePromptModel.CheckClientRunning().ConfigureAwait(true);
+            await GamePromptModel.CheckForUpdates().ConfigureAwait(true);
             if (!closedClient)
             {
                 Close();
                 return;
             }
+            if (!await GamePromptModel.CheckRiotClientPath().ConfigureAwait(true))
+            {
+                Close();
+                return;
+            }
+            var game = Arguments.game;
+            if (game is LaunchGame.Auto)
+            {
+                game = Persistence.GetDefaultLaunchGame();
+                if (game is not LaunchGame.Prompt)
+                {
+                    HandleLaunchChoiceAsync(game);
+                    return;
+                }
+            }
+
             Show();
         }
         catch (Exception ex)
