@@ -152,7 +152,7 @@ internal static class Utils
 
             return rcPaths.FirstOrDefault(File.Exists);
         }
-        catch
+        catch (JsonException)
         {
             return null;
         }
