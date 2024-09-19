@@ -53,67 +53,6 @@ internal static class StartupHandler
         var Application = BuildAvaloniaApp();
         Application.StartWithClassicDesktopLifetime([]);
 
-
-        // Step 1: Open a port for our chat proxy, so we can patch chat port into clientconfig.
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        Trace.WriteLine($"Chat proxy listening on port {port}");
-
-        // Step 2: Find the Riot Client.
-        var riotClientPath = Utils.GetRiotClientPath();
-
-        var game = Persistence.SelectedGame;
-
-        var launchProduct = game switch
-        {
-            LaunchGame.LoL => "league_of_legends",
-            LaunchGame.LoR => "bacon",
-            LaunchGame.VALORANT => "valorant",
-            LaunchGame.RiotClient => null,
-            var x => throw new InvalidOperationException("Unexpected LaunchGame: " + x)
-        };
-
-        // Step 3: Start proxy web server for clientconfig
-        var proxyServer = new ConfigProxy(port);
-
-        // Step 4: Launch Riot Client (+game)
-        var startArgs = new ProcessStartInfo { FileName = riotClientPath, Arguments = $"--client-config-url=\"http://127.0.0.1:{proxyServer.ConfigPort}\"" };
-
-        if (launchProduct is not null)
-            startArgs.Arguments += $" --launch-product={launchProduct} --launch-patchline={Arguments.gamePatchline}";
-
-        if (Arguments.riotClientParams is not null)
-            startArgs.Arguments += $" {Arguments.riotClientParams}";
-
-        if (Arguments.gameParams is not null)
-            startArgs.Arguments += $" -- {Arguments.gameParams}";
-
-        Trace.WriteLine($"About to launch Riot Client with parameters:\n{startArgs.Arguments}");
-        var riotClient = Process.Start(startArgs);
-        // Kill Deceive when Riot Client has exited, so no ghost Deceive exists.
-        if (riotClient is not null)
-        {
-            ListenToRiotClientExit(riotClient);
-        }
-
-        using var mainController = new MainController();
-
-        // Step 5: Get chat server and port for this player by listening to event from ConfigProxy.
-        var servingClients = false;
-        proxyServer.PatchedChatServer += (_, args) =>
-        {
-            Trace.WriteLine($"The original chat server details were {args.ChatHost}:{args.ChatPort}");
-
-            // Step 6: Start serving incoming connections and proxy them!
-            if (servingClients)
-                return;
-            servingClients = true;
-            mainController.StartServingClients(listener, args.ChatHost ?? "", args.ChatPort);
-        };
-
-        // Loop infinitely and handle window messages/tray icon.
-        System.Windows.Forms.Application.Run(mainController);
     }
 
     private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -123,27 +62,7 @@ internal static class StartupHandler
         Trace.WriteLine(Environment.StackTrace);
     }
 
-    private static void ListenToRiotClientExit(Process riotClientProcess)
-    {
-        riotClientProcess.EnableRaisingEvents = true;
-        riotClientProcess.Exited += async (sender, e) =>
-        {
-            Trace.WriteLine("Detected Riot Client exit.");
-            await Task.Delay(3000).ConfigureAwait(false); // wait for a bit to ensure this is not a relaunch triggered by the RC
 
-            var newProcess = Utils.GetRiotClientProcess();
-            if (newProcess is not null)
-            {
-                Trace.WriteLine("A new Riot Client process spawned, monitoring that for exits.");
-                ListenToRiotClientExit(newProcess);
-            }
-            else
-            {
-                Trace.WriteLine("No new clients spawned after waiting, killing ourselves.");
-                Environment.Exit(0);
-            }
-        };
-    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
