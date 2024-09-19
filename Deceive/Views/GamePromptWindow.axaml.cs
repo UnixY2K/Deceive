@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Deceive.ViewModels;
 using System;
-using System.Windows.Forms;
 using Button = Avalonia.Controls.Button;
 
 namespace Deceive.Views;
@@ -12,7 +11,7 @@ public partial class GamePromptWindow : Window
 
     internal static LaunchGame SelectedGame = LaunchGame.Auto;
 
-    private bool gameSelected = false;
+    private bool gameSelected;
     public GamePromptWindow()
     {
         InitializeComponent();
