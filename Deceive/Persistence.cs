@@ -9,6 +9,7 @@ internal static class Persistence
 
     private static readonly string UpdateVersionPath = Path.Combine(DataDir, "updateVersionPrompted");
     private static readonly string DefaultLaunchGamePath = Path.Combine(DataDir, "launchGame");
+    internal static LaunchGame SelectedGame = LaunchGame.Auto;
 
     static Persistence()
     {
@@ -35,4 +36,9 @@ internal static class Persistence
     }
 
     internal static void SetDefaultLaunchGame(LaunchGame game) => File.WriteAllText(DefaultLaunchGamePath, game.ToString());
+
+    internal static void SetSelectedGame(LaunchGame game)
+    {
+        SelectedGame = game;
+    }
 }

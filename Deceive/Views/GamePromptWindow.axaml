@@ -35,30 +35,30 @@
 
 		<UniformGrid Grid.Row="1">
 			<Border Grid.Column="0" Grid.Row="1" Padding="5">
-				<Button Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+				<Button Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="LoL" Click="GameClickHandler">
 					<Image>/Resources/games/lol.png</Image>
 				</Button>
 			</Border>
 			<Border Grid.Column="0" Grid.Row="1" Padding="5">
-				<Button Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+				<Button Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="LoR" Click="GameClickHandler">
 					<Image>/Resources/games/lor.png</Image>
 				</Button>
 			</Border>
 			<Border Grid.Column="0" Grid.Row="1" Padding="5">
-				<Button Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+				<Button Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="Valorant" Click="GameClickHandler">
 					<Image>/Resources/games/valorant.png</Image>
 				</Button>
 			</Border>
 			<Border Grid.Column="0" Grid.Row="1" Padding="5">
-				<Button Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+				<Button Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="RiotClient" Click="GameClickHandler">
 					<Image>/Resources/games/riot_client.png</Image>
 				</Button>
 			</Border>
 		</UniformGrid>
 		<Border Padding="10" Grid.Row="2">
 
-			<CheckBox>
-				<TextBlock Text="{Binding RememberDesition}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+			<CheckBox IsChecked="{Binding RememberDesition}">
+				<TextBlock Text="{Binding RememberDesitionText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
 			</CheckBox>
 		</Border>
 	</Grid>

@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Avalonia;
+using Deceive.Views;
+using Application = Avalonia.Application;
 
 namespace Deceive;
 
@@ -45,6 +47,7 @@ internal static class StartupHandler
     /// Actual main function. Wrapped into a separate function so we can catch exceptions.
     private static async Task StartDeceiveAsync(LaunchGame game, string gamePatchline, string? riotClientParams, string? gameParams)
     {
+        var Application = BuildAvaloniaApp();
         // Refuse to do anything if the client is already running, unless we're specifically
         // allowing that through League/RC's --allow-multiple-clients.
         if (Utils.IsClientRunning() && !(riotClientParams?.Contains("allow-multiple-clients") ?? false))
@@ -110,8 +113,8 @@ internal static class StartupHandler
         // If prompt, display dialog.
         if (game is LaunchGame.Prompt)
         {
-            new GamePromptForm().ShowDialog();
-            game = GamePromptForm.SelectedGame;
+            Application.StartWithClassicDesktopLifetime([]);
+            game = Persistence.SelectedGame;
         }
 
         // If we don't have a concrete game by now, the user has cancelled and nothing we can do.
