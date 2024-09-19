@@ -156,7 +156,7 @@ public partial class GamePromptWindow : Window
             if (servingClients)
                 return;
             servingClients = true;
-            mainController.StartServingClients(_listener, args.ChatHost ?? "", args.ChatPort);
+            mainController.StartServingClients(_listener!, args.ChatHost ?? "", args.ChatPort);
         };
     }
     private void SetupListener()
