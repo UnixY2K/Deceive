@@ -157,11 +157,7 @@ public partial class GamePromptWindow : Window
                 return;
             servingClients = true;
             mainController.StartServingClients(_listener, args.ChatHost ?? "", args.ChatPort);
-
         };
-
-        // Loop infinitely and handle window messages/tray icon.
-        System.Windows.Forms.Application.Run(mainController);
     }
     private void SetupListener()
     {
