@@ -34,15 +34,15 @@ internal sealed class MainController : ApplicationContext
     public string Status { get; set; } = null!;
     private string StatusFile { get; } = Path.Combine(Persistence.DataDir, "status");
     public bool ConnectToMuc { get; set; } = true;
-    private bool SentIntroductionText { get; set; } = false;
-    private CancellationTokenSource? ShutdownToken { get; set; } = null;
+    private bool SentIntroductionText { get; set; }
+    private CancellationTokenSource? ShutdownToken { get; set; }
 
     private ToolStripMenuItem EnabledMenuItem { get; set; } = null!;
     private ToolStripMenuItem ChatStatus { get; set; } = null!;
     private ToolStripMenuItem OfflineStatus { get; set; } = null!;
     private ToolStripMenuItem MobileStatus { get; set; } = null!;
 
-    private List<ProxiedConnection> Connections { get; } = new();
+    private List<ProxiedConnection> Connections { get; } = [];
 
     public void StartServingClients(TcpListener server, string chatHost, int chatPort)
     {
@@ -51,7 +51,7 @@ internal sealed class MainController : ApplicationContext
 
     private async Task ServeClientsAsync(TcpListener server, string chatHost, int chatPort)
     {
-        var cert = new X509Certificate2(Resources.Certificate);
+        using var cert = new X509Certificate2(Resources.Certificate);
 
         while (true)
         {
@@ -61,9 +61,9 @@ internal sealed class MainController : ApplicationContext
                 ShutdownToken?.Cancel();
                 ShutdownToken = null;
 
-                var incoming = await server.AcceptTcpClientAsync();
+                var incoming = await server.AcceptTcpClientAsync().ConfigureAwait(false);
                 var sslIncoming = new SslStream(incoming.GetStream());
-                await sslIncoming.AuthenticateAsServerAsync(cert);
+                await sslIncoming.AuthenticateAsServerAsync(cert).ConfigureAwait(false);
 
                 TcpClient outgoing;
                 while (true)
@@ -91,7 +91,7 @@ internal sealed class MainController : ApplicationContext
                 }
 
                 var sslOutgoing = new SslStream(outgoing.GetStream());
-                await sslOutgoing.AuthenticateAsClientAsync(chatHost);
+                await sslOutgoing.AuthenticateAsClientAsync(chatHost).ConfigureAwait(false);
 
                 var proxiedConnection = new ProxiedConnection(this, sslIncoming, sslOutgoing);
                 proxiedConnection.Start();
@@ -112,8 +112,8 @@ internal sealed class MainController : ApplicationContext
                     SentIntroductionText = true;
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(10_000);
-                        await SendIntroductionTextAsync();
+                        await Task.Delay(10_000).ConfigureAwait(false);
+                        await SendIntroductionTextAsync().ConfigureAwait(false);
                     });
                 }
             } catch (Exception e)
@@ -131,8 +131,8 @@ internal sealed class MainController : ApplicationContext
         EnabledMenuItem = new ToolStripMenuItem("Enabled", null, async (_, _) =>
         {
             Enabled = !Enabled;
-            await UpdateStatusAsync(Enabled ? Status : "chat");
-            await SendMessageFromFakePlayerAsync(Enabled ? "Deceive is now enabled." : "Deceive is now disabled.");
+            await UpdateStatusAsync(Enabled ? Status : "chat").ConfigureAwait(false);
+            await SendMessageFromFakePlayerAsync(Enabled ? "Deceive is now enabled." : "Deceive is now disabled.").ConfigureAwait(false);
             UpdateTray();
         })
         { Checked = Enabled };
@@ -146,7 +146,7 @@ internal sealed class MainController : ApplicationContext
 
         ChatStatus = new ToolStripMenuItem("Online", null, async (_, _) =>
         {
-            await UpdateStatusAsync(Status = "chat");
+            await UpdateStatusAsync(Status = "chat").ConfigureAwait(false);
             Enabled = true;
             UpdateTray();
         })
@@ -154,7 +154,7 @@ internal sealed class MainController : ApplicationContext
 
         OfflineStatus = new ToolStripMenuItem("Offline", null, async (_, _) =>
         {
-            await UpdateStatusAsync(Status = "offline");
+            await UpdateStatusAsync(Status = "offline").ConfigureAwait(false);
             Enabled = true;
             UpdateTray();
         })
@@ -162,7 +162,7 @@ internal sealed class MainController : ApplicationContext
 
         MobileStatus = new ToolStripMenuItem("Mobile", null, async (_, _) =>
         {
-            await UpdateStatusAsync(Status = "mobile");
+            await UpdateStatusAsync(Status = "mobile").ConfigureAwait(false);
             Enabled = true;
             UpdateTray();
         })
@@ -212,12 +212,12 @@ internal sealed class MainController : ApplicationContext
         TrayIcon.ContextMenuStrip = new ContextMenuStrip();
 
 #if DEBUG
-        var sendTestMsg = new ToolStripMenuItem("Send message", null, async (_, _) => { await SendMessageFromFakePlayerAsync("Test"); });
+        var sendTestMsg = new ToolStripMenuItem("Send message", null, async (_, _) => { await SendMessageFromFakePlayerAsync("Test").ConfigureAwait(false); });
 
-        TrayIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[]
-        {
+        TrayIcon.ContextMenuStrip.Items.AddRange(
+        [
             aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, sendTestMsg, restartWithDifferentGameItem, quitMenuItem
-        });
+        ]);
 #else
         TrayIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[] { aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, restartWithDifferentGameItem, quitMenuItem });
 #endif
@@ -246,27 +246,27 @@ internal sealed class MainController : ApplicationContext
         else if (content.ToLower().Contains("enable"))
         {
             if (Enabled)
-                await SendMessageFromFakePlayerAsync("Deceive is already enabled.");
+                await SendMessageFromFakePlayerAsync("Deceive is already enabled.").ConfigureAwait(false);
             else
                 EnabledMenuItem.PerformClick();
         }
         else if (content.ToLower().Contains("disable"))
         {
             if (!Enabled)
-                await SendMessageFromFakePlayerAsync("Deceive is already disabled.");
+                await SendMessageFromFakePlayerAsync("Deceive is already disabled.").ConfigureAwait(false);
             else
                 EnabledMenuItem.PerformClick();
         }
         else if (content.ToLower().Contains("status"))
         {
             if (Status == "chat")
-                await SendMessageFromFakePlayerAsync("You are appearing online.");
+                await SendMessageFromFakePlayerAsync("You are appearing online.").ConfigureAwait(false);
             else
-                await SendMessageFromFakePlayerAsync("You are appearing " + Status + ".");
+                await SendMessageFromFakePlayerAsync("You are appearing " + Status + ".").ConfigureAwait(false);
         }
         else if (content.ToLower().Contains("help"))
         {
-            await SendMessageFromFakePlayerAsync("You can send the following messages to quickly change Deceive settings: online/offline/mobile/enable/disable/status");
+            await SendMessageFromFakePlayerAsync("You can send the following messages to quickly change Deceive settings: online/offline/mobile/enable/disable/status").ConfigureAwait(false);
         }
     }
 
@@ -274,31 +274,31 @@ internal sealed class MainController : ApplicationContext
     {
         SentIntroductionText = true;
         await SendMessageFromFakePlayerAsync("Welcome! Deceive is running and you are currently appearing " + Status +
-                                             ". Despite what the game client may indicate, you are appearing offline to your friends unless you manually disable Deceive.");
-        await Task.Delay(200);
+                                             ". Despite what the game client may indicate, you are appearing offline to your friends unless you manually disable Deceive.").ConfigureAwait(false);
+        await Task.Delay(200).ConfigureAwait(false);
         await SendMessageFromFakePlayerAsync(
-            "If you want to invite others while being offline, you may need to disable Deceive for them to accept. You can enable Deceive again as soon as they are in your lobby.");
-        await Task.Delay(200);
-        await SendMessageFromFakePlayerAsync("To enable or disable Deceive, or to configure other settings, find Deceive in your tray icons.");
-        await Task.Delay(200);
-        await SendMessageFromFakePlayerAsync("Have fun!");
+            "If you want to invite others while being offline, you may need to disable Deceive for them to accept. You can enable Deceive again as soon as they are in your lobby.").ConfigureAwait(false);
+        await Task.Delay(200).ConfigureAwait(false);
+        await SendMessageFromFakePlayerAsync("To enable or disable Deceive, or to configure other settings, find Deceive in your tray icons.").ConfigureAwait(false);
+        await Task.Delay(200).ConfigureAwait(false);
+        await SendMessageFromFakePlayerAsync("Have fun!").ConfigureAwait(false);
     }
 
     private async Task SendMessageFromFakePlayerAsync(string message)
     {
         foreach (var connection in Connections)
-            await connection.SendMessageFromFakePlayerAsync(message);
+            await connection.SendMessageFromFakePlayerAsync(message).ConfigureAwait(false);
     }
 
     private async Task UpdateStatusAsync(string newStatus)
     {
         foreach (var connection in Connections)
-            await connection.UpdateStatusAsync(newStatus);
+            await connection.UpdateStatusAsync(newStatus).ConfigureAwait(false);
 
         if (newStatus == "chat")
-            await SendMessageFromFakePlayerAsync("You are now appearing online.");
+            await SendMessageFromFakePlayerAsync("You are now appearing online.").ConfigureAwait(false);
         else
-            await SendMessageFromFakePlayerAsync("You are now appearing " + newStatus + ".");
+            await SendMessageFromFakePlayerAsync("You are now appearing " + newStatus + ".").ConfigureAwait(false);
     }
 
     private void LoadStatus()
@@ -311,9 +311,8 @@ internal sealed class MainController : ApplicationContext
 
     private async Task ShutdownIfNoReconnect()
     {
-        if (ShutdownToken == null)
-            ShutdownToken = new CancellationTokenSource();
-        await Task.Delay(60_000, ShutdownToken.Token);
+        ShutdownToken ??= new CancellationTokenSource();
+        await Task.Delay(60_000, ShutdownToken.Token).ConfigureAwait(false);
 
         Trace.WriteLine("Received no new connections after 60s, shutting down.");
         Environment.Exit(0);

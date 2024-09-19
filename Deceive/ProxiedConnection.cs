@@ -47,7 +47,7 @@ internal sealed class ProxiedConnection
 
             do
             {
-                byteCount = await Incoming.ReadAsync(bytes, 0, bytes.Length);
+                byteCount = await Incoming.ReadAsync(bytes.AsMemory(0, bytes.Length)).ConfigureAwait(false);
 
                 var content = Encoding.UTF8.GetString(bytes, 0, byteCount);
 
@@ -55,23 +55,23 @@ internal sealed class ProxiedConnection
                 if (content.Contains("<presence") && MainController.Enabled)
                 {
                     Trace.WriteLine("<!--RC TO SERVER ORIGINAL-->" + content);
-                    await PossiblyRewriteAndResendPresenceAsync(content, MainController.Status);
+                    await PossiblyRewriteAndResendPresenceAsync(content, MainController.Status).ConfigureAwait(false);
                 }
                 else if (content.Contains("41c322a1-b328-495b-a004-5ccd3e45eae8@eu1.pvp.net"))
                 {
-                    await MainController.HandleChatMessage(content);
+                    await MainController.HandleChatMessage(content).ConfigureAwait(false);
 
                     //Don't send anything involving our fake user to chat servers
                     Trace.WriteLine("<!--RC TO SERVER REMOVED-->" + content);
                 }
                 else
                 {
-                    await Outgoing.WriteAsync(bytes, 0, byteCount);
+                    await Outgoing.WriteAsync(bytes, 0, byteCount).ConfigureAwait(false);
                     Trace.WriteLine("<!--RC TO SERVER-->" + content);
                 }
 
                 if (InsertedFakePlayer && !SentFakePlayerPresence)
-                    await SendFakePlayerPresenceAsync();
+                    await SendFakePlayerPresenceAsync().ConfigureAwait(false);
             } while (byteCount != 0 && Connected);
         }
         catch (Exception e)
@@ -95,7 +95,7 @@ internal sealed class ProxiedConnection
 
             do
             {
-                byteCount = await Outgoing.ReadAsync(bytes, 0, bytes.Length);
+                byteCount = await Outgoing.ReadAsync(bytes.AsMemory(0, bytes.Length)).ConfigureAwait(false);
                 var content = Encoding.UTF8.GetString(bytes, 0, byteCount);
 
                 // Insert fake player into roster
@@ -113,12 +113,12 @@ internal sealed class ProxiedConnection
                         "<platforms><riot name='&#9;Deceive Active' tagline='...'/></platforms>" +
                         "</item>");
                     var contentBytes = Encoding.UTF8.GetBytes(content);
-                    await Incoming.WriteAsync(contentBytes, 0, contentBytes.Length);
+                    await Incoming.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
                     Trace.WriteLine("<!--DECEIVE TO RC-->" + content);
                 }
                 else
                 {
-                    await Incoming.WriteAsync(bytes, 0, byteCount);
+                    await Incoming.WriteAsync(bytes, 0, byteCount).ConfigureAwait(false);
                     Trace.WriteLine("<!--SERVER TO RC-->" + content);
                 }
             } while (byteCount != 0 && Connected);
@@ -199,7 +199,7 @@ internal sealed class ProxiedConnection
                         Trace.WriteLine("Found VALORANT version: " + ValorantVersion);
                         // only resend
                         if (InsertedFakePlayer && ValorantVersion is not null)
-                            await SendFakePlayerPresenceAsync();
+                            await SendFakePlayerPresenceAsync().ConfigureAwait(false);
                     }
                 }
 
@@ -216,7 +216,7 @@ internal sealed class ProxiedConnection
             }
 
             var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-            await Outgoing.WriteAsync(bytes, 0, bytes.Length);
+            await Outgoing.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
             Trace.WriteLine("<!--DECEIVE TO SERVER-->" + sb);
         }
         catch (Exception e)
@@ -251,7 +251,7 @@ internal sealed class ProxiedConnection
             "</presence>";
 
         var bytes = Encoding.UTF8.GetBytes(presenceMessage);
-        await Incoming.WriteAsync(bytes, 0, bytes.Length);
+        await Incoming.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
         Trace.WriteLine("<!--DECEIVE TO RC-->" + presenceMessage);
     }
 
@@ -275,7 +275,7 @@ internal sealed class ProxiedConnection
         if (string.IsNullOrEmpty(LastPresence) || !Connected)
             return;
 
-        await PossiblyRewriteAndResendPresenceAsync(LastPresence, newStatus);
+        await PossiblyRewriteAndResendPresenceAsync(LastPresence, newStatus).ConfigureAwait(false);
     }
 
     private void OnConnectionErrored()
