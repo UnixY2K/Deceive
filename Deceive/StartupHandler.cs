@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Avalonia;
+using Deceive.Controllers;
 using Deceive.Views;
 using Application = Avalonia.Application;
 
@@ -25,32 +26,22 @@ internal static class StartupHandler
     {
         AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
         ApplicationConfiguration.Initialize();
-        try
-        {
-            await StartDeceiveAsync(args, gamePatchline, riotClientParams, gameParams);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine(ex);
-            // Show some kind of message so that Deceive doesn't just disappear.
-            MessageBox.Show(
-                "Deceive encountered an error and couldn't properly initialize itself. " +
-                "Please contact the creator through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.\n\n" + ex,
-                DeceiveTitle,
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error,
-                MessageBoxDefaultButton.Button1
-            );
-        }
+
+        Arguments.game = args;
+        Arguments.gamePatchline = gamePatchline;
+        Arguments.riotClientParams = riotClientParams;
+        Arguments.gameParams = gameParams;
+        await StartDeceiveAsync().ConfigureAwait(false);
     }
 
     /// Actual main function. Wrapped into a separate function so we can catch exceptions.
-    private static async Task StartDeceiveAsync(LaunchGame game, string gamePatchline, string? riotClientParams, string? gameParams)
+    private static async Task StartDeceiveAsync()
     {
         var Application = BuildAvaloniaApp();
+        Application.StartWithClassicDesktopLifetime([]);
         // Refuse to do anything if the client is already running, unless we're specifically
         // allowing that through League/RC's --allow-multiple-clients.
-        if (Utils.IsClientRunning() && !(riotClientParams?.Contains("allow-multiple-clients") ?? false))
+        if (Utils.IsClientRunning() && !(Arguments.riotClientParams?.Contains("allow-multiple-clients") ?? false))
         {
             var result = MessageBox.Show(
                 "The Riot Client is currently running. In order to mask your online status, the Riot Client needs to be started by Deceive. " +
@@ -106,6 +97,7 @@ internal static class StartupHandler
             return;
         }
 
+        var game = Arguments.game;
         // If launching "auto", use the persisted launch game (which defaults to prompt).
         if (game is LaunchGame.Auto)
             game = Persistence.GetDefaultLaunchGame();
@@ -113,7 +105,6 @@ internal static class StartupHandler
         // If prompt, display dialog.
         if (game is LaunchGame.Prompt)
         {
-            Application.StartWithClassicDesktopLifetime([]);
             game = Persistence.SelectedGame;
         }
 
@@ -137,13 +128,13 @@ internal static class StartupHandler
         var startArgs = new ProcessStartInfo { FileName = riotClientPath, Arguments = $"--client-config-url=\"http://127.0.0.1:{proxyServer.ConfigPort}\"" };
 
         if (launchProduct is not null)
-            startArgs.Arguments += $" --launch-product={launchProduct} --launch-patchline={gamePatchline}";
+            startArgs.Arguments += $" --launch-product={launchProduct} --launch-patchline={Arguments.gamePatchline}";
 
-        if (riotClientParams is not null)
-            startArgs.Arguments += $" {riotClientParams}";
+        if (Arguments.riotClientParams is not null)
+            startArgs.Arguments += $" {Arguments.riotClientParams}";
 
-        if (gameParams is not null)
-            startArgs.Arguments += $" -- {gameParams}";
+        if (Arguments.gameParams is not null)
+            startArgs.Arguments += $" -- {Arguments.gameParams}";
 
         Trace.WriteLine($"About to launch Riot Client with parameters:\n{startArgs.Arguments}");
         var riotClient = Process.Start(startArgs);

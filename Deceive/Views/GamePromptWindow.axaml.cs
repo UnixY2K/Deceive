@@ -1,7 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Deceive.ViewModels;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Button = Avalonia.Controls.Button;
 
 namespace Deceive.Views;
@@ -16,7 +20,7 @@ public partial class GamePromptWindow : Window
     {
         InitializeComponent();
         Closing += (sender, e) => OnClose(sender, e);
-        Loaded += (sender, e) => OnLoaded(sender, e);
+        Loaded += async (sender, e) => await OnLoadedAsync(sender, e).ConfigureAwait(true);
     }
 
 
@@ -25,10 +29,28 @@ public partial class GamePromptWindow : Window
 
     }
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
+    private async Task OnLoadedAsync(object? sender, RoutedEventArgs e)
     {
         // check if the riot client is running
-
+        try
+        {
+            
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine(ex);
+            Hide();
+            // Show some kind of message so that Deceive doesn't just disappear.
+            var box = MessageBoxManager.GetMessageBoxStandard(StartupHandler.DeceiveTitle,
+                "Deceive encountered an error and couldn't properly initialize itself. " +
+                "Please contact the creator through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.\n\n" + ex,
+                ButtonEnum.Ok,
+                MsBox.Avalonia.Enums.Icon.Error
+            );
+            await box.ShowAsync().ConfigureAwait(true);
+            Close();
+            throw;
+        }
     }
 
     private void GameClickHandler(object sender, RoutedEventArgs e)
