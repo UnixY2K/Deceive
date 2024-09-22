@@ -1,8 +1,10 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:vm="using:Deceive.ViewModels"
              x:Class="Deceive.App"
              xmlns:local="using:Deceive"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Default"
+			 x:DataType="vm:TrayIconViewModel">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
@@ -29,8 +31,8 @@
 							</NativeMenu>
 						</NativeMenuItem>
 						<NativeMenuItem Header="Enable Lobby chat" ToggleType="CheckBox" IsChecked="True"/>
-						<NativeMenuItem Header="Restart and launch a different game"/>
-						<NativeMenuItem Header="Quit"/>
+						<NativeMenuItem Header="Restart and launch a different game" Command="{Binding RestartCommand}"/>
+						<NativeMenuItem Header="Quit" Command="{Binding QuitCommand}"/>
 					</NativeMenu>
 				</TrayIcon.Menu>
 			</TrayIcon>

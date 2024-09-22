@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -26,8 +27,10 @@ public partial class App : Application
             {
                 DataContext = new GamePromptWindowViewModel(),
             };
+            DataContext = new TrayIconViewModel();
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
 }

@@ -30,7 +30,7 @@ namespace Deceive.Models
                         return false;
                     while (Utils.IsClientRunning())
                     {
-                        Utils.KillProcesses();
+                        await Utils.KillProcesses().ConfigureAwait(true);
                         await Task.Delay(2000).ConfigureAwait(true); // Riot Client takes a while to die
                     }
                 }

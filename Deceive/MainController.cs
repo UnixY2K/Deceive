@@ -170,44 +170,6 @@ internal sealed class MainController : ApplicationContext
 
         var typeMenuItem = new ToolStripMenuItem("Status Type", null, ChatStatus, OfflineStatus, MobileStatus);
 
-        var restartWithDifferentGameItem = new ToolStripMenuItem("Restart and launch a different game", null, (_, _) =>
-        {
-            var result = MessageBox.Show(
-                "Restart Deceive to launch a different game? This will also stop related games if they are running.",
-                StartupHandler.DeceiveTitle,
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button1
-            );
-
-            if (result is not DialogResult.Yes)
-                return;
-
-            Utils.KillProcesses();
-            Thread.Sleep(2000);
-
-            Persistence.SetDefaultLaunchGame(LaunchGame.Prompt);
-            Process.Start(Application.ExecutablePath);
-            Environment.Exit(0);
-        });
-
-        var quitMenuItem = new ToolStripMenuItem("Quit", null, (_, _) =>
-        {
-            var result = MessageBox.Show(
-                "Are you sure you want to stop Deceive? This will also stop related games if they are running.",
-                StartupHandler.DeceiveTitle,
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button1
-            );
-
-            if (result is not DialogResult.Yes)
-                return;
-
-            Utils.KillProcesses();
-            SaveStatus();
-            Application.Exit();
-        });
 
         TrayIcon.ContextMenuStrip = new ContextMenuStrip();
 
@@ -216,7 +178,7 @@ internal sealed class MainController : ApplicationContext
 
         TrayIcon.ContextMenuStrip.Items.AddRange(
         [
-            aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, sendTestMsg, restartWithDifferentGameItem, quitMenuItem
+            aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, sendTestMsg
         ]);
 #else
         TrayIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[] { aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, restartWithDifferentGameItem, quitMenuItem });
