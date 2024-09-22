@@ -11,7 +11,8 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace Deceive;
 
@@ -111,7 +112,7 @@ internal static class Utils
     public static bool IsClientRunning() => GetProcesses().Count != 0;
 
     // Kills the running LCU/LoR/VALORANT/RC or Deceive instance, if applicable.
-    public static void KillProcesses()
+    public static async Task KillProcesses()
     {
         try
         {
@@ -121,21 +122,20 @@ internal static class Utils
                 if (process.HasExited)
                     continue;
                 process.Kill();
-                process.WaitForExit();
+                await process.WaitForExitAsync().ConfigureAwait(false);
             }
         } catch (Win32Exception ex)
         {
             // thank you C# and your horrible win32 ecosystem integration, I have no clue if this is correct
             if (ex.NativeErrorCode == -2147467259 || ex.ErrorCode == -2147467259 || ex.ErrorCode == 5 || ex.NativeErrorCode == 5)
             {
-                // ERROR_ACCESS_DENIED
-                MessageBox.Show(
-                    "Deceive could not stop existing Riot processes because it does not have the right permissions. Please relaunch this application as an administrator and try again.",
+                var box = MessageBoxManager.GetMessageBoxStandard(
                     StartupHandler.DeceiveTitle,
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error,
-                    MessageBoxDefaultButton.Button1
+                    "Deceive could not stop existing Riot processes because it does not have the right permissions. Please relaunch this application as an administrator and try again.",
+                    ButtonEnum.Ok,
+                    Icon.Error
                 );
+                await box.ShowAsync().ConfigureAwait(false);
                 Environment.Exit(0);
             }
 

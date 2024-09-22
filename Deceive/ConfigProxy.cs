@@ -8,9 +8,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using EmbedIO;
 using EmbedIO.Actions;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace Deceive;
 
@@ -163,22 +164,24 @@ internal sealed class ConfigProxy
                 if (riotChatHost is not null && riotChatPort != 0)
                     PatchedChatServer?.Invoke(this, new ChatServerEventArgs { ChatHost = riotChatHost, ChatPort = riotChatPort });
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
                 Trace.WriteLine(ex);
 
                 // Show a message instead of failing silently.
-                MessageBox.Show(
+                var box = MessageBoxManager.GetMessageBoxStandard(
+                    StartupHandler.DeceiveTitle,
                     "Deceive was unable to rewrite a League of Legends configuration file. This normally happens because Riot changed something on their end. " +
                     "Please check if there's a new version of Deceive available, or contact the creator through GitHub (https://github.com/molenzwiebel/Deceive) or Discord if there's not.\n\n" +
                     ex,
-                    StartupHandler.DeceiveTitle,
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error,
-                    MessageBoxDefaultButton.Button1
+                    ButtonEnum.Ok,
+                    Icon.Error
                 );
 
-                Application.Exit();
+                await box.ShowAsync().ConfigureAwait(false);
+
+
+                Environment.Exit(1);
             }
 
         }

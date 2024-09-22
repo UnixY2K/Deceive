@@ -1,13 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Avalonia;
 using Deceive.Controllers;
-using Deceive.Views;
 using Application = Avalonia.Application;
 
 namespace Deceive;
@@ -25,7 +21,6 @@ internal static class StartupHandler
     public static async Task Main(LaunchGame args = LaunchGame.Auto, string gamePatchline = "live", string? riotClientParams = null, string? gameParams = null)
     {
         AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
-        ApplicationConfiguration.Initialize();
 
         Arguments.game = args;
         Arguments.gamePatchline = gamePatchline;
