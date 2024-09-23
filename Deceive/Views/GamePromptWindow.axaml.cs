@@ -146,7 +146,7 @@ public partial class GamePromptWindow : Window
             ListenToRiotClientExit(riotClient);
         }
 
-        using var mainController = new MainController();
+        _ = MainController.Instance;
         var servingClients = false;
         proxyServer.PatchedChatServer += (_, args) =>
         {
@@ -156,7 +156,7 @@ public partial class GamePromptWindow : Window
             if (servingClients)
                 return;
             servingClients = true;
-            mainController.StartServingClients(_listener!, args.ChatHost ?? "", args.ChatPort);
+            MainController.Instance.StartServingClients(_listener!, args.ChatHost ?? "", args.ChatPort);
         };
     }
     private void SetupListener()

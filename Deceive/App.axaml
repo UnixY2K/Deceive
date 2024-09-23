@@ -18,19 +18,20 @@
 	<TrayIcon.Icons>
 		<TrayIcons>
 			<TrayIcon Icon="/Resources/deceive.ico"
-					  ToolTipText="Avalonia Tray Icon ToolTip">
+					  ToolTipText="Deceive">
 				<TrayIcon.Menu>
 					<NativeMenu>
 						<NativeMenuItem Header="Deceive" IsEnabled="False"/>
-						<NativeMenuItem Header="Enabled" ToggleType="CheckBox" IsChecked="True"/>
-						<NativeMenuItem Header="Settings">
+						<NativeMenuItem Header="Enabled" ToggleType="CheckBox" IsChecked="{Binding Enabled}" Command="{Binding ToggleEnabledCommand}"/>
+						<NativeMenuItem Header="Status Type">
 							<NativeMenu>
-								<NativeMenuItem Header="Online"  ToggleType="Radio" IsChecked="False"/>
-								<NativeMenuItem Header="Offline" ToggleType="Radio" IsChecked="True"/>
-								<NativeMenuItem Header="Mobile"  ToggleType="Radio" IsChecked="False"/>
+								<NativeMenuItem Header="Online"  ToggleType="Radio" IsChecked="{Binding IsOnline}" Command="{Binding SetOnlineStatusCommand}"/>
+								<NativeMenuItem Header="Offline" ToggleType="Radio" IsChecked="{Binding IsOffline}" Command="{Binding SetOfflineStatusCommand}"/>
+								<NativeMenuItem Header="Mobile"  ToggleType="Radio" IsChecked="{Binding IsMobile}" Command="{Binding SetMobileStatusCommand}"/>
 							</NativeMenu>
 						</NativeMenuItem>
-						<NativeMenuItem Header="Enable Lobby chat" ToggleType="CheckBox" IsChecked="True"/>
+						<NativeMenuItem Header="Enable Lobby chat" ToggleType="CheckBox" IsChecked="{Binding EnabledLobbyChat}" Command="{Binding ToggleEnabledLobbyChatCommand}"/>
+						<NativeMenuItem Header="Send Message" Command="{Binding SendMessageCommand}"/>
 						<NativeMenuItem Header="Restart and launch a different game" Command="{Binding RestartCommand}"/>
 						<NativeMenuItem Header="Quit" Command="{Binding QuitCommand}"/>
 					</NativeMenu>

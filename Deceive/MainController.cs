@@ -7,41 +7,26 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using Avalonia.Threading;
 using Deceive.Properties;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace Deceive;
 
-internal sealed class MainController : ApplicationContext
+internal sealed class MainController
 {
-    internal MainController()
+    private MainController()
     {
-        TrayIcon = new NotifyIcon
-        {
-            Icon = Resources.DeceiveIcon,
-            Visible = true,
-            BalloonTipTitle = StartupHandler.DeceiveTitle,
-            BalloonTipText = "Deceive is currently masking your status. Right-click the tray icon for more options."
-        };
-        TrayIcon.ShowBalloonTip(5000);
-
         LoadStatus();
-        UpdateTray();
     }
 
-    private NotifyIcon TrayIcon { get; }
     public bool Enabled { get; set; } = true;
     public string Status { get; set; } = null!;
     private string StatusFile { get; } = Path.Combine(Persistence.DataDir, "status");
     public bool ConnectToMuc { get; set; } = true;
     private bool SentIntroductionText { get; set; }
     private CancellationTokenSource? ShutdownToken { get; set; }
-
-    private ToolStripMenuItem EnabledMenuItem { get; set; } = null!;
-    private ToolStripMenuItem ChatStatus { get; set; } = null!;
-    private ToolStripMenuItem OfflineStatus { get; set; } = null!;
-    private ToolStripMenuItem MobileStatus { get; set; } = null!;
-
     private List<ProxiedConnection> Connections { get; } = [];
 
     public void StartServingClients(TcpListener server, string chatHost, int chatPort)
@@ -58,7 +43,10 @@ internal sealed class MainController : ApplicationContext
             try
             {
                 // no need to shutdown, we received a new request
-                ShutdownToken?.Cancel();
+                if (ShutdownToken != null)
+                {
+                    await ShutdownToken.CancelAsync().ConfigureAwait(false);
+                }
                 ShutdownToken = null;
 
                 var incoming = await server.AcceptTcpClientAsync().ConfigureAwait(false);
@@ -76,17 +64,20 @@ internal sealed class MainController : ApplicationContext
                     catch (SocketException e)
                     {
                         Trace.WriteLine(e);
-                        var result = MessageBox.Show(
-                            "Unable to connect to the chat server. Please check your internet connection. " +
-                            "If this issue persists and you can connect to chat normally without Deceive, " +
-                            "please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
-                            StartupHandler.DeceiveTitle,
-                            MessageBoxButtons.RetryCancel,
-                            MessageBoxIcon.Error,
-                            MessageBoxDefaultButton.Button1
-                        );
-                        if (result == DialogResult.Cancel)
-                            Environment.Exit(0);
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            var box = MessageBoxManager.GetMessageBoxStandard(
+                                StartupHandler.DeceiveTitle,
+                                "Unable to connect to the chat server. Please check your internet connection. " +
+                                "If this issue persists and you can connect to chat normally without Deceive, " +
+                                "please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
+                                ButtonEnum.OkCancel,
+                                Icon.Error
+                            );
+                            var result = await box.ShowAsync().ConfigureAwait(false);
+                            if (result == ButtonResult.Cancel)
+                                Environment.Exit(0);
+                        }).ConfigureAwait(false);
                     }
                 }
 
@@ -116,7 +107,8 @@ internal sealed class MainController : ApplicationContext
                         await SendIntroductionTextAsync().ConfigureAwait(false);
                     });
                 }
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Trace.WriteLine("Failed to handle incoming connection.");
                 Trace.WriteLine(e);
@@ -124,109 +116,41 @@ internal sealed class MainController : ApplicationContext
         }
     }
 
-    private void UpdateTray()
-    {
-        var aboutMenuItem = new ToolStripMenuItem(StartupHandler.DeceiveTitle) { Enabled = false };
-
-        EnabledMenuItem = new ToolStripMenuItem("Enabled", null, async (_, _) =>
-        {
-            Enabled = !Enabled;
-            await UpdateStatusAsync(Enabled ? Status : "chat").ConfigureAwait(false);
-            await SendMessageFromFakePlayerAsync(Enabled ? "Deceive is now enabled." : "Deceive is now disabled.").ConfigureAwait(false);
-            UpdateTray();
-        })
-        { Checked = Enabled };
-
-        var mucMenuItem = new ToolStripMenuItem("Enable lobby chat", null, (_, _) =>
-        {
-            ConnectToMuc = !ConnectToMuc;
-            UpdateTray();
-        })
-        { Checked = ConnectToMuc };
-
-        ChatStatus = new ToolStripMenuItem("Online", null, async (_, _) =>
-        {
-            await UpdateStatusAsync(Status = "chat").ConfigureAwait(false);
-            Enabled = true;
-            UpdateTray();
-        })
-        { Checked = Status.Equals("chat") };
-
-        OfflineStatus = new ToolStripMenuItem("Offline", null, async (_, _) =>
-        {
-            await UpdateStatusAsync(Status = "offline").ConfigureAwait(false);
-            Enabled = true;
-            UpdateTray();
-        })
-        { Checked = Status.Equals("offline") };
-
-        MobileStatus = new ToolStripMenuItem("Mobile", null, async (_, _) =>
-        {
-            await UpdateStatusAsync(Status = "mobile").ConfigureAwait(false);
-            Enabled = true;
-            UpdateTray();
-        })
-        { Checked = Status.Equals("mobile") };
-
-        var typeMenuItem = new ToolStripMenuItem("Status Type", null, ChatStatus, OfflineStatus, MobileStatus);
-
-
-        TrayIcon.ContextMenuStrip = new ContextMenuStrip();
-
-#if DEBUG
-        var sendTestMsg = new ToolStripMenuItem("Send message", null, async (_, _) => { await SendMessageFromFakePlayerAsync("Test").ConfigureAwait(false); });
-
-        TrayIcon.ContextMenuStrip.Items.AddRange(
-        [
-            aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, sendTestMsg
-        ]);
-#else
-        TrayIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[] { aboutMenuItem, EnabledMenuItem, typeMenuItem, mucMenuItem, restartWithDifferentGameItem, quitMenuItem });
-#endif
-    }
-
     public async Task HandleChatMessage(string content)
     {
-        if (content.Contains("offline", StringComparison.CurrentCultureIgnoreCase))
+        if (content.Contains("offline", StringComparison.InvariantCultureIgnoreCase))
         {
             if (!Enabled)
                 await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
-            OfflineStatus.PerformClick();
         }
-        else if (content.Contains("mobile", StringComparison.CurrentCultureIgnoreCase))
+        else if (content.Contains("mobile", StringComparison.InvariantCultureIgnoreCase))
         {
             if (!Enabled)
                 await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
-            MobileStatus.PerformClick();
         }
-        else if (content.ToLower().Contains("online"))
+        else if (content.Contains("online", StringComparison.InvariantCultureIgnoreCase))
         {
             if (!Enabled)
                 await SendMessageFromFakePlayerAsync("Deceive is now enabled.").ConfigureAwait(false);
-            ChatStatus.PerformClick();
         }
-        else if (content.ToLower().Contains("enable"))
+        else if (content.Contains("enable", StringComparison.InvariantCultureIgnoreCase))
         {
             if (Enabled)
                 await SendMessageFromFakePlayerAsync("Deceive is already enabled.").ConfigureAwait(false);
-            else
-                EnabledMenuItem.PerformClick();
         }
-        else if (content.ToLower().Contains("disable"))
+        else if (content.Contains("disable", StringComparison.InvariantCultureIgnoreCase))
         {
             if (!Enabled)
                 await SendMessageFromFakePlayerAsync("Deceive is already disabled.").ConfigureAwait(false);
-            else
-                EnabledMenuItem.PerformClick();
         }
-        else if (content.ToLower().Contains("status"))
+        else if (content.Contains("status", StringComparison.InvariantCultureIgnoreCase))
         {
             if (Status == "chat")
                 await SendMessageFromFakePlayerAsync("You are appearing online.").ConfigureAwait(false);
             else
                 await SendMessageFromFakePlayerAsync("You are appearing " + Status + ".").ConfigureAwait(false);
         }
-        else if (content.ToLower().Contains("help"))
+        else if (content.Contains("help", StringComparison.InvariantCultureIgnoreCase))
         {
             await SendMessageFromFakePlayerAsync("You can send the following messages to quickly change Deceive settings: online/offline/mobile/enable/disable/status").ConfigureAwait(false);
         }
@@ -280,5 +204,42 @@ internal sealed class MainController : ApplicationContext
         Environment.Exit(0);
     }
 
-    private void SaveStatus() => File.WriteAllText(StatusFile, Status);
+    public void SaveStatus() => File.WriteAllText(StatusFile, Status);
+
+    public async void SetEnabled(bool enabled)
+    {
+        await UpdateStatusAsync(enabled ? Status : "chat").ConfigureAwait(false);
+        await SendMessageFromFakePlayerAsync(enabled ? "Deceive is now enabled." : "Deceive is now disabled.").ConfigureAwait(false);
+    }
+
+    public async void SetOnlineStatus()
+    {
+        await UpdateStatusAsync(Status = "chat").ConfigureAwait(false);
+    }
+
+    public async void SetOfflineStatus()
+    {
+        await UpdateStatusAsync(Status = "offline").ConfigureAwait(false);
+    }
+
+    public async void SetMobileStatus()
+    {
+        await UpdateStatusAsync(Status = "mobile").ConfigureAwait(false);
+    }
+
+    public async void SendTestMessage()
+    {
+        await SendMessageFromFakePlayerAsync("Test").ConfigureAwait(false);
+    }
+
+    public async void SetEnabledLobbyChat(bool enabled)
+    {
+        ConnectToMuc = enabled;
+        await SendMessageFromFakePlayerAsync(enabled ? "Lobby chat is now enabled." : "Lobby chat is now disabled.").ConfigureAwait(false);
+    }
+
+
+    // singleton pattern
+    private static MainController? _instance;
+    public static MainController Instance => _instance ??= new MainController();
 }

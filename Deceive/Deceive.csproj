@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <AssemblyVersion>1.14.0.0</AssemblyVersion>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
@@ -14,7 +13,6 @@
     <Folder Include="Models\" />
     <AvaloniaResource Include="Resources\**" />
     <EmbeddedResource Include="Resources\server.pfx" />
-    <EmbeddedResource Include="Resources\deceive.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.1.0" />
