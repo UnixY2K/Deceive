@@ -144,7 +144,7 @@ internal sealed class ConfigProxy
                                 Trace.WriteLine($"AFFINITY: {affinity} -> {riotChatHost}");
                             }
                         }
-                        catch (Exception e)
+                        catch (HttpRequestException e)
                         {
                             Trace.WriteLine("Error getting player affinity token, using default chat server.");
                             Trace.WriteLine(e);

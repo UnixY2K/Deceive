@@ -108,10 +108,23 @@ internal sealed class MainController
                     });
                 }
             }
+            catch (SocketException e)
+            {
+                Trace.WriteLine("SocketException occurred while handling incoming connection.");
+                Trace.WriteLine(e);
+                throw;
+            }
+            catch (IOException e)
+            {
+                Trace.WriteLine("IOException occurred while handling incoming connection.");
+                Trace.WriteLine(e);
+                throw;
+            }
             catch (Exception e)
             {
-                Trace.WriteLine("Failed to handle incoming connection.");
+                Trace.WriteLine("Unexpected exception occurred while handling incoming connection.");
                 Trace.WriteLine(e);
+                throw;
             }
         }
     }
