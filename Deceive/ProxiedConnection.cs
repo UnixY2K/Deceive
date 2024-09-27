@@ -74,10 +74,21 @@ internal sealed class ProxiedConnection
                     await SendFakePlayerPresenceAsync().ConfigureAwait(false);
             } while (byteCount != 0 && Connected);
         }
+        catch (IOException e)
+        {
+            Trace.WriteLine("Incoming IO errored.");
+            Trace.WriteLine(e);
+        }
+        catch (ObjectDisposedException e)
+        {
+            Trace.WriteLine("Incoming object disposed errored.");
+            Trace.WriteLine(e);
+        }
         catch (Exception e)
         {
             Trace.WriteLine("Incoming errored.");
             Trace.WriteLine(e);
+            throw;
         }
         finally
         {
@@ -123,10 +134,21 @@ internal sealed class ProxiedConnection
                 }
             } while (byteCount != 0 && Connected);
         }
+        catch (IOException e)
+        {
+            Trace.WriteLine("Outgoing IO errored.");
+            Trace.WriteLine(e);
+        }
+        catch (ObjectDisposedException e)
+        {
+            Trace.WriteLine("Outgoing object disposed errored.");
+            Trace.WriteLine(e);
+        }
         catch (Exception e)
         {
             Trace.WriteLine("Outgoing errored.");
             Trace.WriteLine(e);
+            throw;
         }
         finally
         {
@@ -219,10 +241,23 @@ internal sealed class ProxiedConnection
             await Outgoing.WriteAsync(bytes).ConfigureAwait(false);
             Trace.WriteLine("<!--DECEIVE TO SERVER-->" + sb);
         }
+        catch (XmlException e)
+        {
+            Trace.WriteLine(e);
+            Trace.WriteLine("XML Error rewriting presence.");
+            throw;
+        }
+        catch (JsonException e)
+        {
+            Trace.WriteLine(e);
+            Trace.WriteLine("JSON Error rewriting presence.");
+            throw;
+        }
         catch (Exception e)
         {
             Trace.WriteLine(e);
-            Trace.WriteLine("Error rewriting presence.");
+            Trace.WriteLine("Unexpected error rewriting presence.");
+            throw;
         }
     }
 
