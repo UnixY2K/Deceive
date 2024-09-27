@@ -19,9 +19,9 @@ internal sealed class ProxiedConnection
     private SslStream Outgoing { get; set; } = null!;
     private bool Connected { get; set; } = true;
     private string LastPresence { get; set; } = null!; // we resend this if the state changes
-    private bool InsertedFakePlayer { get; set; } = false;
-    private bool SentFakePlayerPresence { get; set; } = false;
-    private string? ValorantVersion { get; set; } = null;
+    private bool InsertedFakePlayer { get; set; }
+    private bool SentFakePlayerPresence { get; set; }
+    private string? ValorantVersion { get; set; }
 
     internal event EventHandler? ConnectionErrored;
 
@@ -52,12 +52,12 @@ internal sealed class ProxiedConnection
                 var content = Encoding.UTF8.GetString(bytes, 0, byteCount);
 
                 // If this is possibly a presence stanza, rewrite it.
-                if (content.Contains("<presence") && MainController.Enabled)
+                if (content.Contains("<presence", StringComparison.InvariantCultureIgnoreCase) && MainController.Enabled)
                 {
                     Trace.WriteLine("<!--RC TO SERVER ORIGINAL-->" + content);
                     await PossiblyRewriteAndResendPresenceAsync(content, MainController.Status).ConfigureAwait(false);
                 }
-                else if (content.Contains("41c322a1-b328-495b-a004-5ccd3e45eae8@eu1.pvp.net"))
+                else if (content.Contains("41c322a1-b328-495b-a004-5ccd3e45eae8@eu1.pvp.net", StringComparison.InvariantCultureIgnoreCase))
                 {
                     await MainController.HandleChatMessage(content).ConfigureAwait(false);
 
@@ -66,7 +66,7 @@ internal sealed class ProxiedConnection
                 }
                 else
                 {
-                    await Outgoing.WriteAsync(bytes, 0, byteCount).ConfigureAwait(false);
+                    await Outgoing.WriteAsync(bytes.AsMemory(0, byteCount)).ConfigureAwait(false);
                     Trace.WriteLine("<!--RC TO SERVER-->" + content);
                 }
 
@@ -100,7 +100,7 @@ internal sealed class ProxiedConnection
 
                 // Insert fake player into roster
                 const string roster = "<query xmlns='jabber:iq:riotgames:roster'>";
-                if (!InsertedFakePlayer && content.Contains(roster))
+                if (!InsertedFakePlayer && content.Contains(roster, StringComparison.InvariantCultureIgnoreCase))
                 {
                     InsertedFakePlayer = true;
                     Trace.WriteLine("<!--SERVER TO RC ORIGINAL-->" + content);
@@ -113,12 +113,12 @@ internal sealed class ProxiedConnection
                         "<platforms><riot name='&#9;Deceive Active' tagline='...'/></platforms>" +
                         "</item>");
                     var contentBytes = Encoding.UTF8.GetBytes(content);
-                    await Incoming.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
+                    await Incoming.WriteAsync(contentBytes).ConfigureAwait(false);
                     Trace.WriteLine("<!--DECEIVE TO RC-->" + content);
                 }
                 else
                 {
-                    await Incoming.WriteAsync(bytes, 0, byteCount).ConfigureAwait(false);
+                    await Incoming.WriteAsync(bytes.AsMemory(0, byteCount)).ConfigureAwait(false);
                     Trace.WriteLine("<!--SERVER TO RC-->" + content);
                 }
             } while (byteCount != 0 && Connected);
@@ -216,7 +216,7 @@ internal sealed class ProxiedConnection
             }
 
             var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-            await Outgoing.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            await Outgoing.WriteAsync(bytes).ConfigureAwait(false);
             Trace.WriteLine("<!--DECEIVE TO SERVER-->" + sb);
         }
         catch (Exception e)
@@ -251,7 +251,7 @@ internal sealed class ProxiedConnection
             "</presence>";
 
         var bytes = Encoding.UTF8.GetBytes(presenceMessage);
-        await Incoming.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+        await Incoming.WriteAsync(bytes).ConfigureAwait(false);
         Trace.WriteLine("<!--DECEIVE TO RC-->" + presenceMessage);
     }
 
@@ -266,7 +266,7 @@ internal sealed class ProxiedConnection
             $"<message from='41c322a1-b328-495b-a004-5ccd3e45eae8@eu1.pvp.net/RC-Deceive' stamp='{stamp}' id='fake-{stamp}' type='chat'><body>{message}</body></message>";
 
         var bytes = Encoding.UTF8.GetBytes(chatMessage);
-        await Incoming.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+        await Incoming.WriteAsync(bytes).ConfigureAwait(false);
         Trace.WriteLine("<!--DECEIVE TO RC-->" + chatMessage);
     }
 
