@@ -102,6 +102,7 @@ internal static class Utils
         riotCandidates.AddRange(Process.GetProcessesByName("LoR"));
         riotCandidates.AddRange(Process.GetProcessesByName("VALORANT-Win64-Shipping"));
         riotCandidates.AddRange(Process.GetProcessesByName("RiotClientServices"));
+        riotCandidates.AddRange(Process.GetProcessesByName("Riot Client"));
         return riotCandidates;
     }
 
