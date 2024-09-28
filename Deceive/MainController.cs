@@ -70,7 +70,8 @@ internal sealed class MainController
                                 StartupHandler.DeceiveTitle,
                                 "Unable to connect to the chat server. Please check your internet connection. " +
                                 "If this issue persists and you can connect to chat normally without Deceive, " +
-                                "please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
+                                "please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) \n" + 
+                                "or Discord.",
                                 ButtonEnum.OkCancel,
                                 Icon.Error
                             );

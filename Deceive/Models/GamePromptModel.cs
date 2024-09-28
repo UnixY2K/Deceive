@@ -20,8 +20,10 @@ namespace Deceive.Models
                 if (Utils.IsClientRunning())
                 {
                     var box = MessageBoxManager.GetMessageBoxStandard(StartupHandler.DeceiveTitle,
-                        "The Riot Client is currently running. In order to mask your online status, the Riot Client needs to be started by Deceive. " +
-                        "Do you want Deceive to stop the Riot Client and games launched by it, so that it can restart with the proper configuration?",
+                        "The Riot Client is currently running. \n" + 
+                        "In order to mask your online status, the Riot Client needs to be started by Deceive. \n" +
+                        "Do you want Deceive to stop the Riot Client and games launched by it, \n" + 
+                        "so that it can restart with the proper configuration?",
                         ButtonEnum.YesNo,
                         Icon.Question
                     );
@@ -46,8 +48,9 @@ namespace Deceive.Models
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(
                     StartupHandler.DeceiveTitle,
-                    $"There is a new version of Deceive available. You are currently using Deceive {Utils.DeceiveVersion}. " +
-                    $"Do you want to download the new version?",
+                    "There is a new version of Deceive available. \n" + 
+                    "You are currently using Deceive {Utils.DeceiveVersion}. " +
+                    "Do you want to download the new version?",
                     ButtonEnum.YesNo,
                     Icon.Question
                 );
@@ -64,8 +67,12 @@ namespace Deceive.Models
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(
                     StartupHandler.DeceiveTitle,
-                    "Deceive was unable to find the path to the Riot Client. Usually this can be resolved by launching any Riot Games game once, then launching Deceive again. " +
-                    "If this does not resolve the issue, please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.",
+                    "Deceive was unable to find the path to the Riot Client. \n" + 
+                    "Usually this can be resolved by launching any Riot Games game once, \n" + 
+                    "then launching Deceive again. " +
+                    "If this does not resolve the issue, \n" + 
+                    "please file a bug report through GitHub (https://github.com/molenzwiebel/Deceive) \n" + 
+                    "or Discord.",
                     ButtonEnum.Ok,
                     Icon.Error
                 );

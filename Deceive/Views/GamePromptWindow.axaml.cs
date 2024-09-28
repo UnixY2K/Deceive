@@ -75,8 +75,9 @@ public partial class GamePromptWindow : Window
             Trace.WriteLine(ex);
             // Show some kind of message so that Deceive doesn't just disappear.
             var box = MessageBoxManager.GetMessageBoxStandard(StartupHandler.DeceiveTitle,
-                "Deceive encountered an error and couldn't properly initialize itself. " +
-                "Please contact the creator through GitHub (https://github.com/molenzwiebel/Deceive) or Discord.\n\n" + ex,
+                "Deceive encountered an error and couldn't properly initialize itself. \n" +
+                "Please contact the creator through GitHub (https://github.com/molenzwiebel/Deceive) \n" +
+                "or Discord.\n\n" + ex,
                 ButtonEnum.Ok,
                 MsBox.Avalonia.Enums.Icon.Error
             );

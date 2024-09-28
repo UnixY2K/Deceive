@@ -20,7 +20,8 @@ public partial class TrayIconViewModel : ViewModelBase, INotifyPropertyChanged
     {
         var box = MessageBoxManager.GetMessageBoxStandard(
             StartupHandler.DeceiveTitle,
-            "Are you sure you want to stop Deceive? This will also stop related games if they are running.",
+            "Are you sure you want to stop Deceive? \n" + 
+            "This will also stop related games if they are running.",
             ButtonEnum.YesNo,
             Icon.Question
         );
@@ -40,7 +41,8 @@ public partial class TrayIconViewModel : ViewModelBase, INotifyPropertyChanged
     {
         var box = MessageBoxManager.GetMessageBoxStandard(
             StartupHandler.DeceiveTitle,
-            "Restart Deceive to launch a different game? This will also stop related games if they are running.",
+            "Restart Deceive to launch a different game? \n " + 
+            "This will also stop related games if they are running.",
             ButtonEnum.YesNo,
             Icon.Question
         );

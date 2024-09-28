@@ -131,7 +131,9 @@ internal static class Utils
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(
                     StartupHandler.DeceiveTitle,
-                    "Deceive could not stop existing Riot processes because it does not have the right permissions. Please relaunch this application as an administrator and try again.",
+                    "Deceive could not stop existing Riot processes because \n" + 
+                    "it does not have the right permissions. \n" + 
+                    "Please relaunch this application as an administrator and try again.",
                     ButtonEnum.Ok,
                     Icon.Error
                 );
