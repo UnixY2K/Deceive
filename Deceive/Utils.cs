@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -125,15 +125,16 @@ internal static class Utils
                 process.Kill();
                 await process.WaitForExitAsync().ConfigureAwait(false);
             }
-        } catch (Win32Exception ex)
+        }
+        catch (Win32Exception ex)
         {
             // thank you C# and your horrible win32 ecosystem integration, I have no clue if this is correct
             if (ex.NativeErrorCode == -2147467259 || ex.ErrorCode == -2147467259 || ex.ErrorCode == 5 || ex.NativeErrorCode == 5)
             {
                 var box = MessageBoxManager.GetMessageBoxStandard(
                     StartupHandler.DeceiveTitle,
-                    "Deceive could not stop existing Riot processes because \n" + 
-                    "it does not have the right permissions. \n" + 
+                    "Deceive could not stop existing Riot processes because \n" +
+                    "it does not have the right permissions. \n" +
                     "Please relaunch this application as an administrator and try again.",
                     ButtonEnum.Ok,
                     Icon.Error
@@ -151,8 +152,12 @@ internal static class Utils
     public static string? GetRiotClientPath()
     {
         // Find the RiotClientInstalls file.
-        var installPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "Riot Games/RiotClientInstalls.json");
+        var installPath = Path.Combine(
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? "/Users/Shared"
+                : Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "Riot Games/RiotClientInstalls.json"
+        );
         if (!File.Exists(installPath))
             return null;
 
